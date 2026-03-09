@@ -35,58 +35,100 @@ enum MarkdownRenderer {
             <style>
                 body {
                     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-                    padding: 16px;
-                    line-height: 1.7;
+                    padding: 20px 16px 32px 16px;
+                    line-height: 1.75;
                     font-size: 17px;
                     color: #111111;
                     background-color: #ffffff;
                     word-wrap: break-word;
+                    -webkit-font-smoothing: antialiased;
                 }
 
                 h1, h2, h3 {
                     line-height: 1.25;
-                    margin-top: 1.2em;
+                    font-weight: 700;
+                    margin-top: 1.4em;
                     margin-bottom: 0.6em;
                 }
 
+                h1 {
+                    font-size: 2em;
+                    border-bottom: 1px solid #eeeeee;
+                    padding-bottom: 0.3em;
+                }
+
+                h2 {
+                    font-size: 1.55em;
+                }
+
+                h3 {
+                    font-size: 1.25em;
+                }
+
                 p {
-                    margin: 0.8em 0;
+                    margin: 0.9em 0;
                 }
 
                 ul, ol {
                     padding-left: 1.4em;
-                    margin: 0.8em 0;
+                    margin: 0.9em 0;
+                }
+
+                li {
+                    margin: 0.35em 0;
                 }
 
                 blockquote {
                     border-left: 4px solid #d0d0d0;
-                    padding-left: 12px;
+                    padding: 0.2em 0 0.2em 12px;
                     color: #555555;
-                    margin: 1em 0;
+                    margin: 1.2em 0;
+                    background: #fafafa;
+                    border-radius: 0 8px 8px 0;
                 }
 
                 pre {
-                    background: #f4f4f4;
-                    padding: 12px;
-                    border-radius: 10px;
+                    background: #f6f8fa;
+                    padding: 14px 16px;
+                    border-radius: 12px;
                     overflow-x: auto;
+                    margin: 1em 0;
                 }
 
                 code {
-                    background: #f4f4f4;
+                    background: #f3f4f6;
                     padding: 2px 6px;
                     border-radius: 6px;
                     font-family: SFMono-Regular, Menlo, monospace;
+                    font-size: 0.95em;
                 }
 
                 pre code {
                     background: transparent;
                     padding: 0;
+                    border-radius: 0;
+                    font-size: 0.92em;
                 }
 
                 a {
                     color: #0a84ff;
                     text-decoration: none;
+                }
+
+                hr {
+                    border: none;
+                    border-top: 1px solid #e5e7eb;
+                    margin: 1.5em 0;
+                }
+
+                mjx-container {
+                    margin: 0.2em 0;
+                }
+
+                mjx-container[display="true"] {
+                    margin: 1em 0 !important;
+                    overflow-x: auto;
+                    overflow-y: hidden;
                 }
             </style>
         </head>
@@ -103,6 +145,8 @@ enum MarkdownRenderer {
         var html: [String] = []
         var inCodeBlock = false
         var codeBuffer: [String] = []
+        var inMathBlock = false
+        var mathBuffer: [String] = []
         var inUnorderedList = false
         var inOrderedList = false
 
@@ -119,7 +163,26 @@ enum MarkdownRenderer {
 
         for rawLine in lines {
             let line = rawLine.trimmingCharacters(in: .whitespaces)
+            
+            if line == "$$" {
+                closeListsIfNeeded()
 
+                if inMathBlock {
+                    let math = mathBuffer.joined(separator: "\n")
+                    html.append("$$\n\(math)\n$$")
+                    mathBuffer.removeAll()
+                    inMathBlock = false
+                } else {
+                    inMathBlock = true
+                }
+                continue
+            }
+
+            if inMathBlock {
+                mathBuffer.append(rawLine)
+                continue
+            }
+            
             if line.hasPrefix("```") {
                 closeListsIfNeeded()
 
@@ -203,6 +266,11 @@ enum MarkdownRenderer {
         if inCodeBlock {
             let code = codeBuffer.joined(separator: "\n")
             html.append("<pre><code>\(escapeHTML(code))</code></pre>")
+        }
+        
+        if inMathBlock {
+            let math = mathBuffer.joined(separator: "\n")
+            html.append("$$\n\(math)\n$$")
         }
 
         return html.joined(separator: "\n")

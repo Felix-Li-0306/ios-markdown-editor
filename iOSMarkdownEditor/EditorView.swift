@@ -9,6 +9,7 @@ import SwiftUI
 
 struct EditorView: View {
     @Binding var document: MarkdownDocument
+    @State private var selectedRange: NSRange = NSRange(location: 0, length: 0)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -19,27 +20,27 @@ struct EditorView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     toolbarButton("#") {
-                        insert("#")
+                        insertAtCursor("#")
                     }
 
                     toolbarButton("-") {
-                        insert("-")
+                        insertAtCursor("-")
                     }
 
                     toolbarButton("**") {
-                        insert("**")
+                        insertAtCursor("**")
                     }
 
                     toolbarButton("`") {
-                        insert("`")
+                        insertAtCursor("`")
                     }
 
                     toolbarButton("$") {
-                        insert("$")
+                        insertAtCursor("$")
                     }
 
                     toolbarButton("$$") {
-                        insert("$$")
+                        insertAtCursor("$$")
                     }
                 }
                 .padding(.horizontal, 2)
@@ -48,12 +49,15 @@ struct EditorView: View {
             Text("Markdown Source")
                 .font(.headline)
 
-            TextEditor(text: $document.content)
-                .padding(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
+            CursorTextEditor(
+                text: $document.content,
+                selectedRange: $selectedRange
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+            )
         }
         .padding()
         .navigationTitle("Editor")
@@ -91,7 +95,18 @@ struct EditorView: View {
         .buttonStyle(.plain)
     }
 
-    private func insert(_ text: String) {
-        document.content += text
+    private func insertAtCursor(_ insertedText: String) {
+        let currentText = document.content
+        guard let stringRange = Range(selectedRange, in: currentText) else {
+            document.content += insertedText
+            selectedRange = NSRange(location: document.content.count, length: 0)
+            return
+        }
+
+        let updatedText = currentText.replacingCharacters(in: stringRange, with: insertedText)
+        document.content = updatedText
+
+        let newLocation = selectedRange.location + insertedText.count
+        selectedRange = NSRange(location: newLocation, length: 0)
     }
 }
