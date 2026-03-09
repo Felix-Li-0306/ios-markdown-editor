@@ -6,10 +6,13 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @State private var documents: [MarkdownDocument] = []
-
+    @State private var isImporting = false
+    @State private var importErrorMessage: String?
+    
     private var sortedDocuments: [MarkdownDocument] {
         documents.sorted { $0.updatedAt > $1.updatedAt }
     }
@@ -43,13 +46,19 @@ struct ContentView: View {
             }
             .navigationTitle("Markdown Documents")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItemGroup(placement: .topBarLeading) {
                     if !documents.isEmpty {
                         EditButton()
                     }
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        isImporting = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.down")
+                    }
+
                     Button {
                         createDocument()
                     } label: {
@@ -63,6 +72,22 @@ struct ContentView: View {
         }
         .onChange(of: documents) { _, newValue in
             DocumentStore.saveDocuments(newValue)
+        }
+        
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.plainText, UTType(filenameExtension: "md") ?? .plainText],
+            allowsMultipleSelection: false
+        ) { result in
+            handleImportResult(result)
+        }
+        .alert("Import Failed", isPresented: Binding(
+            get: { importErrorMessage != nil },
+            set: { if !$0 { importErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(importErrorMessage ?? "Unknown error")
         }
     }
     
@@ -93,6 +118,65 @@ struct ContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
+    }
+    
+    private func handleImportResult(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            importDocument(from: url)
+
+        case .failure(let error):
+            importErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func importDocument(from url: URL) {
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+
+        defer {
+            if didStartAccessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        do {
+            let content = try String(contentsOf: url, encoding: .utf8)
+            let importedTitle = makeImportedTitle(from: url)
+
+            let newDocument = MarkdownDocument(
+                id: UUID(),
+                title: importedTitle,
+                content: content,
+                createdAt: Date(),
+                updatedAt: Date()
+            )
+
+            documents.append(newDocument)
+        } catch {
+            importErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func makeImportedTitle(from url: URL) -> String {
+        let baseName = url.deletingPathExtension().lastPathComponent
+        let trimmedBaseName = baseName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallback = trimmedBaseName.isEmpty ? "Imported Document" : trimmedBaseName
+
+        let existingTitles = Set(
+            documents.map { $0.title.trimmingCharacters(in: .whitespacesAndNewlines) }
+        )
+
+        if !existingTitles.contains(fallback) {
+            return fallback
+        }
+
+        var index = 2
+        while existingTitles.contains("\(fallback) \(index)") {
+            index += 1
+        }
+
+        return "\(fallback) \(index)"
     }
     
     private func loadDocuments() {

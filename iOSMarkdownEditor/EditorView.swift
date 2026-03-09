@@ -11,6 +11,21 @@ struct EditorView: View {
     @Binding var document: MarkdownDocument
     @State private var selectedRange: NSRange = NSRange(location: 0, length: 0)
 
+    private var displayTitle: String {
+        let trimmed = document.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Untitled" : trimmed
+    }
+
+    private var shareURL: URL {
+        let safeTitle = sanitizedFileName(from: displayTitle)
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(safeTitle)
+            .appendingPathExtension("md")
+
+        try? document.content.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             TextField("Untitled", text: $document.title)
@@ -63,7 +78,15 @@ struct EditorView: View {
         .navigationTitle("Editor")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                ShareLink(
+                    item: shareURL,
+                    subject: Text(displayTitle),
+                    message: Text("Shared from iOS Markdown Editor")
+                ) {
+                    Image(systemName: "square.and.arrow.up")
+                }
+
                 NavigationLink(
                     destination: PreviewView(
                         title: document.title,
@@ -108,5 +131,12 @@ struct EditorView: View {
 
         let newLocation = selectedRange.location + insertedText.count
         selectedRange = NSRange(location: newLocation, length: 0)
+    }
+
+    private func sanitizedFileName(from title: String) -> String {
+        let invalidCharacters = CharacterSet(charactersIn: "/\\:?%*|\"<>")
+        let cleaned = title.components(separatedBy: invalidCharacters).joined(separator: "-")
+        let trimmed = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Untitled" : trimmed
     }
 }
