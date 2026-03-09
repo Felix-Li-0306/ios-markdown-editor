@@ -8,24 +8,18 @@
 import SwiftUI
 
 struct EditorView: View {
-    let document: MarkdownDocument
-    @State private var content: String
-
-    init(document: MarkdownDocument) {
-        self.document = document
-        _content = State(initialValue: document.content)
-    }
+    @Binding var document: MarkdownDocument
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(document.title)
-                .font(.title2)
-                .fontWeight(.bold)
+            TextField("Document Title", text: $document.title)
+                .textFieldStyle(.roundedBorder)
+                .font(.title3)
 
             Text("Markdown Source")
                 .font(.headline)
 
-            TextEditor(text: $content)
+            TextEditor(text: $document.content)
                 .padding(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -37,22 +31,21 @@ struct EditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(destination: PreviewView(title: document.title, content: content)) {
+                NavigationLink(
+                    destination: PreviewView(
+                        title: document.title,
+                        content: document.content
+                    )
+                ) {
                     Text("Preview")
                 }
             }
         }
+        .onChange(of: document.title) { _, _ in
+            document.updatedAt = Date()
+        }
+        .onChange(of: document.content) { _, _ in
+            document.updatedAt = Date()
+        }
     }
-}
-
-#Preview {
-    EditorView(
-        document: MarkdownDocument(
-            id: UUID(),
-            title: "Welcome.md",
-            content: "# Welcome",
-            createdAt: Date(),
-            updatedAt: Date()
-        )
-    )
 }

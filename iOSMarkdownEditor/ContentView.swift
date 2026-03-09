@@ -36,9 +36,16 @@ struct ContentView: View {
         NavigationStack {
             List {
                 Section("Documents") {
-                    ForEach(documents) { document in
-                        NavigationLink(destination: EditorView(document: document)) {
-                            Text(document.title)
+                    ForEach($documents) { $document in
+                        NavigationLink(destination: EditorView(document: $document)) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(document.title)
+                                    .font(.body)
+
+                                Text(document.updatedAt, style: .date)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                     .onDelete(perform: deleteDocument)
