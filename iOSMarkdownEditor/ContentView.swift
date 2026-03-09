@@ -16,29 +16,37 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("Documents") {
-                    ForEach(sortedDocuments) { document in
-                        if let index = documents.firstIndex(where: { $0.id == document.id }) {
-                            NavigationLink(destination: EditorView(document: $documents[index])) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(documents[index].title.isEmpty ? "Untitled" : documents[index].title)
-                                        .font(.body)
+            Group {
+                if documents.isEmpty {
+                    emptyStateView
+                } else {
+                    List {
+                        Section("Documents") {
+                            ForEach(sortedDocuments) { document in
+                                if let index = documents.firstIndex(where: { $0.id == document.id }) {
+                                    NavigationLink(destination: EditorView(document: $documents[index])) {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(documents[index].title.isEmpty ? "Untitled" : documents[index].title)
+                                                .font(.body)
 
-                                    Text(documents[index].updatedAt, style: .date)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                            Text(documents[index].updatedAt, style: .date)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
                                 }
                             }
+                            .onDelete(perform: deleteDocumentFromSortedList)
                         }
                     }
-                    .onDelete(perform: deleteDocumentFromSortedList)
                 }
             }
             .navigationTitle("Markdown Documents")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    EditButton()
+                    if !documents.isEmpty {
+                        EditButton()
+                    }
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -57,7 +65,36 @@ struct ContentView: View {
             DocumentStore.saveDocuments(newValue)
         }
     }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
 
+            Text("No Documents Yet")
+                .font(.title3)
+                .fontWeight(.semibold)
+
+            Text("Create your first Markdown document to start writing.")
+                .font(.body)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+
+            Button {
+                createDocument()
+            } label: {
+                Label("Create Document", systemImage: "plus")
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
+    }
+    
     private func loadDocuments() {
         let savedDocuments = DocumentStore.loadDocuments()
 
