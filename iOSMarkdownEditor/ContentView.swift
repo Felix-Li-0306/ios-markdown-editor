@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    let documents: [MarkdownDocument] = [
+    @State private var documents: [MarkdownDocument] = [
         MarkdownDocument(
             id: UUID(),
             title: "Welcome.md",
@@ -41,19 +41,39 @@ struct ContentView: View {
                             Text(document.title)
                         }
                     }
+                    .onDelete(perform: deleteDocument)
                 }
             }
             .navigationTitle("Markdown Documents")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        // TODO: Create new document
+                        createDocument()
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
         }
+    }
+
+    private func createDocument() {
+        let newDocument = MarkdownDocument(
+            id: UUID(),
+            title: "Untitled-\(documents.count + 1).md",
+            content: "",
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        documents.insert(newDocument, at: 0)
+    }
+
+    private func deleteDocument(at offsets: IndexSet) {
+        documents.remove(atOffsets: offsets)
     }
 }
 
