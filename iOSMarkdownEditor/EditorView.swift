@@ -18,28 +18,28 @@ struct EditorView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    toolbarButton("# ") {
-                        insert("# ")
+                    toolbarButton("#") {
+                        insert("#")
                     }
 
-                    toolbarButton("- ") {
-                        insert("- ")
+                    toolbarButton("-") {
+                        insert("-")
                     }
 
-                    toolbarButton("**B**") {
-                        insert("**bold**")
+                    toolbarButton("**") {
+                        insert("**")
                     }
 
-                    toolbarButton("`code`") {
-                        insert("`code`")
+                    toolbarButton("`") {
+                        insert("`")
                     }
 
-                    toolbarButton("$x$") {
-                        insert("$x$")
+                    toolbarButton("$") {
+                        insert("$")
                     }
 
                     toolbarButton("$$") {
-                        insert("$$\n\n$$")
+                        insert("$$")
                     }
                 }
                 .padding(.horizontal, 2)
@@ -92,10 +92,6 @@ struct EditorView: View {
     }
 
     private func insert(_ text: String) {
-        if document.content.isEmpty {
-            document.content = text
-        } else {
-            document.content += "\n" + text
-        }
+        document.content += text
     }
 }
