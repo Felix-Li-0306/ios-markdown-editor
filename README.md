@@ -1,54 +1,84 @@
 # iOS Markdown Editor
 
-An open-source, mobile-first Markdown editor for iOS with separate source and preview modes.
+A lightweight iOS Markdown editor with separate source and preview modes.
 
 ## Overview
 
-This project aims to build a lightweight Markdown editor for iOS that provides:
+iOS Markdown Editor is a mobile-first Markdown writing app built for iPhone.  
+It focuses on a simple editing experience, rendered preview, and support for basic Markdown plus LaTeX math.
 
-- a clean source editing experience
-- a separate rendered preview mode
-- local document management
-- a simple and mobile-friendly interface
+This project started as an open-source learning project and has now reached a usable v1 state.
 
-## MVP Goals
+## Features
 
-The first version will focus on:
+- Create and edit Markdown documents on iPhone
+- Separate source mode and preview mode
+- Basic Markdown rendering
+- Inline math with `$...$`
+- Display math with `$$...$$`
+- Local document persistence
+- Import Markdown files from Files / iCloud Drive
+- Share documents as `.md` files
+- Documents sorted by recent update time
+- Empty state for first-time use
+- Basic editor toolbar for common Markdown symbols
 
-- creating Markdown documents
-- editing Markdown in source mode
-- previewing rendered Markdown in a separate view
-- saving documents locally
-- browsing recent documents
+## Current v1 Scope
 
-## Current Status
+### Editor
+- document title editing
+- raw Markdown editing
+- cursor-aware symbol insertion
+- basic toolbar for Markdown symbols
 
-Project planning and repository setup in progress.
+### Preview
+- rendered Markdown preview
+- support for headings, lists, blockquotes, code blocks, links, bold, italic
+- support for inline and display math
+
+### Storage and File Actions
+- local document saving
+- import from Files / iCloud Drive
+- share current document as a Markdown file
+
+## Current Limitations
+
+- Markdown support focuses on common syntax only
+- Preview rendering is intentionally lightweight and not fully Typora-compatible
+- Imported files are currently copied into the app workflow rather than continuously synced with external files
+- No PDF export yet
+- No full external file editing workflow yet
 
 ## Tech Stack
 
-Planned technologies:
-
 - Swift
 - SwiftUI
-- WKWebView or native rendering for preview
-- local file storage
+- UIKit bridge for cursor-aware editing
+- WKWebView for rendered preview
+- MathJax for math rendering
+- local JSON-based persistence
 
-## Roadmap
+## Project Structure
 
-### v0.1
-- document list
-- create document
-- source editor
-- preview mode
-- local save
+- `ContentView`: document list
+- `EditorView`: source editing
+- `PreviewView`: rendered preview
+- `CursorTextEditor`: cursor-aware editing bridge
+- `MarkdownRenderer`: lightweight Markdown + math rendering
+- `DocumentStore`: local persistence
 
-### Future ideas
-- toolbar for Markdown shortcuts
-- import/export
-- themes
+## Status
+
+Version 1 is complete and usable as a local Markdown editor MVP.
+
+## Future Ideas
+
+- export to Files
 - dark mode polish
-- better file organization
+- better preview styling
+- document search
+- richer Markdown support
+- external file editing workflows
 
 ## License
 
